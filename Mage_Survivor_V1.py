@@ -122,6 +122,7 @@ class Monster:
         self.color = (255, 0, 0)
         self.can_shoot = False
         self.was_hit = False
+        self.health_bar_visible = False
         self.hit_animation_frame = 0
         self.hit_animation_start = 0
         self.animation_frame = 0
@@ -451,6 +452,41 @@ wave_compositions = [
     {BossMonster : 1}
 ]
 
+def restart_game(
+        game_over, 
+        PLAYER_MAX_HP, 
+        PLAYER_HP, player, 
+        monsters, 
+        wave_cleared, 
+        game_started, 
+        waves, 
+        fireballs, 
+        monster_projectiles, 
+        FIREBALL_DAMAGE, 
+        PLAYER_SPEED, 
+        FIREBALL_SIZE, 
+        FIREBALL_COOLDOWN):
+    
+    player.x = 375
+    player.y = 275
+
+    monsters.clear()
+    fireballs.clear()
+    monster_projectiles.clear()
+
+    wave_cleared = False
+    game_started = False
+    waves = 1
+
+    game_over = False
+
+    PLAYER_HP = PLAYER_MAX_HP
+    FIREBALL_DAMAGE = 1
+    PLAYER_SPEED = 5
+    FIREBALL_SIZE = 8
+    FIREBALL_COOLDOWN = 1000
+
+    return game_over, PLAYER_MAX_HP, PLAYER_HP, wave_cleared, game_started, waves, FIREBALL_DAMAGE, PLAYER_SPEED, FIREBALL_SIZE, FIREBALL_COOLDOWN
 
 def main():
 
@@ -524,6 +560,8 @@ def main():
 
     game_over_font = pygame.font.Font(None, 72)
 
+    restart_font = pygame.font.Font(None, 50)
+
     victory_font = pygame.font.Font(None, 80)
 
 
@@ -534,6 +572,8 @@ def main():
     game_over = False
     game_won = False
     game_started = False
+
+    restart = False
 
     player_invicible = True
 
@@ -575,6 +615,13 @@ def main():
 
             if event.type == pygame.QUIT:
                 running = False
+
+            if event.type == pygame.KEYDOWN and game_over:
+
+                if event.key == pygame.K_r:
+                    game_over, PLAYER_MAX_HP, PLAYER_HP, wave_cleared, game_started, waves, FIREBALL_DAMAGE, PLAYER_SPEED, FIREBALL_SIZE, FIREBALL_COOLDOWN = restart_game(
+                        game_over, PLAYER_MAX_HP, PLAYER_HP, player, monsters, wave_cleared, game_started, waves, fireballs, monster_projectiles, FIREBALL_DAMAGE, PLAYER_SPEED, FIREBALL_SIZE, FIREBALL_COOLDOWN
+                        )
 
             if event.type == pygame.KEYDOWN and not game_over and not game_won:
 
@@ -843,6 +890,7 @@ def main():
                         monster.hp -= FIREBALL_DAMAGE
 
                         monster.was_hit = True
+                        monster.health_bar_visible = True
                         monster.hit_animation_frame = 0
                         monster.hit_animation_start = pygame.time.get_ticks()
 
@@ -922,6 +970,15 @@ def main():
                 game_over_text,
                 (220, 250)
             )
+            restart_text = restart_font.render(
+                "Press R to restart",
+                True,
+                (255, 255, 255)
+            )
+            screen.blit(
+                restart_text,
+                (250, 350)
+            )
 
 
         player_hp_text = font.render(f'HP : {PLAYER_HP} / {PLAYER_MAX_HP}', True, (250, 30, 30))
@@ -948,7 +1005,7 @@ def main():
                 pygame.draw.rect(screen, monster.color, monster.rect)
 
 
-            if monster.was_hit:
+            if monster.health_bar_visible:
 
                 bar_width = monster.rect.width
                 bar_height = 6
